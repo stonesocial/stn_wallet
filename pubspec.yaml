@@ -1,0 +1,35 @@
+name: stn_wallet
+description: "A new Flutter package project."
+version: 0.0.1
+publish_to: none
+homepage:
+
+environment:
+  sdk: '>=3.5.3 <4.0.0'
+  flutter: ">=3.24.3"
+
+dependencies:
+  mockito: ^5.4.4
+  flutter:
+    sdk: flutter
+  dependencies:
+    path: ../dependencies
+  core:
+    path: ../core
+  qr_flutter: ^4.1.0
+  bip39: ^1.0.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  borsh_annotation: ^0.3.1+5
+  build_runner:
+  freezed: ^2.4.6
+  json_serializable: ^6.7.1
+  injectable_generator: ^2.4.1
+  metrics_for_dart_code:
+    git:
+      url: "https://github.com/ladans-io/metrics_for_dart_code"
+
+flutter:
