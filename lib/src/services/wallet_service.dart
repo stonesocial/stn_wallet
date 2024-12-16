@@ -11,6 +11,8 @@ const failedToFetchExchangeRate = 'Failed to fetch exchange rate';
 const maxRequestPerSecondReached = 'Max request/sec reached';
 const userNotFoundOnBlockchain = 'User not found on blockchain';
 
+const cachedCountKey = 'cached_count_key';
+
 @singleton
 class WalletService extends ClientEitherResponseHandler with RpcExceptionHandler {
 
@@ -143,6 +145,8 @@ class WalletService extends ClientEitherResponseHandler with RpcExceptionHandler
       return (txCountResult.$1, null);
     }
 
+    cacheCounts(txCountResult.$2!.total, txCountResult.$2!.received, txCountResult.$2!.sent);
+
     return (null, txCountResult.$2!);
   }
 
@@ -156,5 +160,26 @@ class WalletService extends ClientEitherResponseHandler with RpcExceptionHandler
     if (result.$1 != null) return (result.$1, null);
 
     return (null, SocialMining.fromJson(result.$2!.data['data']));
+  }
+
+  //cache
+  Future<void> cacheCounts(int total, int received, int sent) async {
+    await storage.write(cachedCountKey, '$received***$sent***$total');
+  }
+
+  Future<(Failure?, ({int total, int received, int sent})?)> getCacheCounts() async {
+    final result = await storage.read(cachedCountKey);
+    final splitResult = result.$2.toString().split('***');
+    if (result.$1 != null)  return (result.$1, null);
+
+    if (result.$2 != null) {
+      final received = int.parse(splitResult[0]);
+      final sent = int.parse(splitResult[1]);
+      final total = int.parse(splitResult[2]);
+
+      return (null, (received: received, sent: sent, total: total));
+    }
+
+    return (null, null);
   }
 }

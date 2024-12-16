@@ -44,7 +44,7 @@ class TransactionsResponse {
         signature: transaction.signatures[0],
         block: e.slot,
         amount: lamportsToSol(getTxAmount(e.meta)),
-        amountUsd: lamportsToSol(getTxAmount(e.meta)) * (solUsdRate ?? 0),
+        amountUsd: double.parse((lamportsToSol(getTxAmount(e.meta)) * (solUsdRate ?? 0)).toStringAsFixed(4)),
         blockTime: DateTime.fromMillisecondsSinceEpoch((e.blockTime ?? 0) * 1000).toIso8601String(),
       );
     }).toList();
