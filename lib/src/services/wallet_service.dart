@@ -12,6 +12,7 @@ const maxRequestPerSecondReached = 'Max request/sec reached';
 const userNotFoundOnBlockchain = 'User not found on blockchain';
 
 const cachedCountKey = 'cached_count_key';
+const cachedBalanceKey = 'cached_balance_key';
 
 @singleton
 class WalletService extends ClientEitherResponseHandler with RpcExceptionHandler {
@@ -59,12 +60,13 @@ class WalletService extends ClientEitherResponseHandler with RpcExceptionHandler
   }
 
   Future<(Failure?, double?)> getBalance(String pubKey) async {
-    final result = await handle(
-      solanaClient.solana.rpcClient.getBalance(pubKey, commitment: Commitment.confirmed),
-    );
+    final result = await handle(solanaClient.solana.rpcClient.getBalance(pubKey, commitment: Commitment.confirmed));
     if (result.$1 != null) return (result.$1!, null);
+    final sols = result.$2!.value / lamportsPerSol;
 
-    return (null, result.$2!.value / lamportsPerSol);
+    cacheBalance(sols, sols * (solUsdRate ?? .0));
+
+    return (null, sols);
   }
 
   Future<(Failure?, double?)> getSolToUsdRate() async {
@@ -178,6 +180,25 @@ class WalletService extends ClientEitherResponseHandler with RpcExceptionHandler
       final total = int.parse(splitResult[2]);
 
       return (null, (received: received, sent: sent, total: total));
+    }
+
+    return (null, null);
+  }
+
+  Future<void> cacheBalance(double sol, double usd) async {
+    await storage.write(cachedBalanceKey, '$sol***$usd');
+  }
+
+  Future<(Failure?, ({double sol, double usd})?)> getCacheBalance() async {
+    final result = await storage.read(cachedBalanceKey);
+    final splitResult = result.$2.toString().split('***');
+    if (result.$1 != null)  return (result.$1, null);
+
+    if (result.$2 != null) {
+      final sol = double.parse(splitResult[0]);
+      final usd = double.parse(splitResult[1]);
+
+      return (null, (sol: sol, usd: usd));
     }
 
     return (null, null);
